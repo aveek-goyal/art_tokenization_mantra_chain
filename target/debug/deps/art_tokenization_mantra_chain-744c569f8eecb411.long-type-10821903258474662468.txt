@@ -1,0 +1,1 @@
+std::iter::Map<std::iter::Take<Filter<Box<dyn Iterator<Item = Result<(std::string::String, Expiration), cosmwasm_std::StdError>>>, {closure@src/query.rs:75:21: 75:24}>>, fn(Result<(Addr, Expiration), cosmwasm_std::StdError>) -> Result<cw721::Approval, cosmwasm_std::StdError> {parse_approval}>

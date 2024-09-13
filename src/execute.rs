@@ -91,16 +91,6 @@ where
         if info.sender != minter {
             return Err(ContractError::Unauthorized {});
         }
-
-        // TODO: You might want to add additional checks here, such as:
-        // - Ensuring max_mints is greater than the current token_count
-        // - Preventing the admin from decreasing max_mints below the current token_count
-        // - Validating the price (e.g., ensuring it's not zero)
-
-        // Save the price and max_mints to contract storage 
-        // (you'll need to define suitable storage items in state.rs)
-        // Save the price and max_mints to contract storage
-        // We need to add these fields to the Cw721Contract struct in state.rs
         self.mint_price.save(deps.storage, &price)?;
         self.max_mints.save(deps.storage, &max_mints)?;
 
@@ -132,7 +122,6 @@ where
 }
 
 
-// TODO pull this into some sort of trait extension??
 impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,

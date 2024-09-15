@@ -1,10 +1,2 @@
 # Auto detect text files and perform LF normalization
 * text=auto
-
-/target
-download.wasm
-mona_lisa.json
-
-/packages
-
-/artifacts

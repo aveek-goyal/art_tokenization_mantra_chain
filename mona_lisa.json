@@ -1,0 +1,11 @@
+{
+    "name": "Mona Lisa",
+    "description": "Painting of Mona Lisa by Leonardo da Vinci",
+    "image": "ipfs://QmcDZp9pparq6R5N9xP6v4dvQdy4ueYwhjF4mS2t3WPWtf",
+    "attributes": [
+      {
+        "trait_type": "Artist", 
+        "value": "Leonardo da Vinci"
+      }
+    ]
+  }

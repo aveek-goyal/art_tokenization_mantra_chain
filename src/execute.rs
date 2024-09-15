@@ -38,6 +38,7 @@ where
         self.minting_allowed.save(deps.storage, &true)?;
         self.max_mints.save(deps.storage, &msg.max_mints)?;
         self.mint_price.save(deps.storage, &msg.mint_price)?;
+        self.token_uri.save(deps.storage, &msg.token_uri)?;
         Ok(Response::default())
     }
 
@@ -153,14 +154,14 @@ where
             return Err(ContractError::IncorrectPayment {});
         }
 
-        // Create a temporary variable for token_uri with a literal value
-        let token_uri = Some("https://example.com/token/".to_string() + &token_count.to_string());
-
+        // Retrieve the token_uri from storage
+        let token_uri = self.token_uri.load(deps.storage)?;
+        
         // create the token
         let token = TokenInfo {
             owner: deps.api.addr_validate(&msg.owner)?,
             approvals: vec![],
-            token_uri, // Use the temporary variable here
+            token_uri, 
             extension: msg.extension,
         };
         self.tokens
@@ -169,7 +170,7 @@ where
                 None => Ok(token),
             })?;
 
-        self.increment_tokens(deps.storage)?;
+        self.update_token_count(deps.storage, true)?;
 
         Ok(Response::new()
             .add_attribute("action", "mint")
@@ -317,7 +318,7 @@ where
         self.check_can_send(deps.as_ref(), &env, &info, &token)?;
 
         self.tokens.remove(deps.storage, &token_id)?;
-        self.decrement_tokens(deps.storage)?;
+        self.update_token_count(deps.storage, false)?;
 
         Ok(Response::new()
             .add_attribute("action", "burn")

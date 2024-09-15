@@ -54,7 +54,7 @@ export default function App() {
         showToast("Error fetching config. Please try again later.", "error");
       });
     }
-  }, [isConnected, queryConfig]);
+  }, [isConnected, queryConfig, toast]);
 
   const handleMint = useCallback(() => {
     mintNft().then(() => {

@@ -30,7 +30,6 @@ export default function App() {
   const toast = useToast();
 
   const [config, setConfig] = useState(null);
-  const [mintAmount, setMintAmount] = useState(1);
 
   const connectWallet = async () => {
     if (!checkKeplrInstalled()) {
@@ -58,14 +57,14 @@ export default function App() {
   }, [isConnected, queryConfig]);
 
   const handleMint = useCallback(() => {
-    mintNft(mintAmount).then(() => {
+    mintNft().then(() => {
       showToast("NFT minted successfully!", "success");
     }).catch(error => {
       console.error("Failed to mint NFT:", error);
       setLoading(false);
       showToast("Error minting NFT. Please try again.", "error");
     });
-  }, [mintAmount, mintNft, setLoading]);
+  }, [mintNft, setLoading]);
 
   const showToast = (message, status) => {
     toast({
@@ -81,7 +80,7 @@ export default function App() {
     <Box minH="100vh" minW="100vw" bg={colorMode === "dark" ? "gray.800" : "gray.100"}>
       <Container maxW="container.xl" py={8}>
         <Flex justify="space-between" align="center" mb={8}>
-          <Heading size="xl">NFT Gallery Minter</Heading>
+          <Heading size="xl">NFT Gallery</Heading>
           <HStack spacing={4}>
             {account && (
               <Text fontSize="sm">
@@ -114,22 +113,14 @@ export default function App() {
               />
             </Center>
             <VStack spacing={4} align="center">
-              <Heading size="lg">{config.name}</Heading>
-              <Text fontSize="md" textAlign="center" maxW="600px">
+              <Heading size="lg" colorScheme="black">{config.name}</Heading>
+              <Text fontSize="md" textAlign="center" maxW="600px" colorScheme="black">
                 {config.description}
               </Text>
               <HStack>
                 <Badge colorScheme="blue">Max Mints: {config.max_mint}</Badge>
                 <Badge colorScheme="green">Mint Price: {config.mint_price} OM</Badge>
               </HStack>
-              <HStack spacing={4} mt={4}>
-                <Input
-                  type="number"
-                  value={mintAmount}
-                  onChange={(e) => setMintAmount(e.target.value)}
-                  placeholder="Enter amount"
-                  width="100px"
-                />
                 <Button
                   onClick={handleMint}
                   isLoading={loading}
@@ -139,7 +130,6 @@ export default function App() {
                 >
                   Mint NFT
                 </Button>
-              </HStack>
             </VStack>
           </VStack>
         ) : (

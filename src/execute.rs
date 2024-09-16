@@ -38,6 +38,7 @@ where
         self.minting_allowed.save(deps.storage, &true)?;
         self.max_mints.save(deps.storage, &msg.max_mints)?;
         self.mint_price.save(deps.storage, &msg.mint_price)?;
+        self.token_uri.save(deps.storage, &msg.token_uri)?;
         Ok(Response::default())
     }
 
@@ -91,16 +92,6 @@ where
         if info.sender != minter {
             return Err(ContractError::Unauthorized {});
         }
-
-        // TODO: You might want to add additional checks here, such as:
-        // - Ensuring max_mints is greater than the current token_count
-        // - Preventing the admin from decreasing max_mints below the current token_count
-        // - Validating the price (e.g., ensuring it's not zero)
-
-        // Save the price and max_mints to contract storage 
-        // (you'll need to define suitable storage items in state.rs)
-        // Save the price and max_mints to contract storage
-        // We need to add these fields to the Cw721Contract struct in state.rs
         self.mint_price.save(deps.storage, &price)?;
         self.max_mints.save(deps.storage, &max_mints)?;
 
@@ -132,7 +123,6 @@ where
 }
 
 
-// TODO pull this into some sort of trait extension??
 impl<'a, T, C> Cw721Contract<'a, T, C>
 where
     T: Serialize + DeserializeOwned + Clone,
@@ -164,14 +154,14 @@ where
             return Err(ContractError::IncorrectPayment {});
         }
 
-        // Create a temporary variable for token_uri with a literal value
-        let token_uri = Some("https://example.com/token/".to_string() + &token_count.to_string());
-
+        // Retrieve the token_uri from storage
+        let token_uri = self.token_uri.load(deps.storage)?;
+        
         // create the token
         let token = TokenInfo {
             owner: deps.api.addr_validate(&msg.owner)?,
             approvals: vec![],
-            token_uri, // Use the temporary variable here
+            token_uri, 
             extension: msg.extension,
         };
         self.tokens
@@ -180,7 +170,7 @@ where
                 None => Ok(token),
             })?;
 
-        self.increment_tokens(deps.storage)?;
+        self.update_token_count(deps.storage, true)?;
 
         Ok(Response::new()
             .add_attribute("action", "mint")
@@ -328,7 +318,7 @@ where
         self.check_can_send(deps.as_ref(), &env, &info, &token)?;
 
         self.tokens.remove(deps.storage, &token_id)?;
-        self.decrement_tokens(deps.storage)?;
+        self.update_token_count(deps.storage, false)?;
 
         Ok(Response::new()
             .add_attribute("action", "burn")

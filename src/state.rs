@@ -16,10 +16,10 @@ where
     pub contract_info: Item<'a, ContractInfoResponse>,
     pub minter: Item<'a, Addr>,
     pub token_count: Item<'a, u64>,
+    pub token_uri: Item<'a, Option<String>>, 
     pub tokens: IndexedMap<'a, &'a str, TokenInfo<T>, TokenIndexes<'a,T>>,
     pub operators: Map<'a, (&'a Addr, &'a Addr), Expiration>,
     pub(crate) _custom_response: PhantomData<C>,
-    // Add these new fields
     pub minting_allowed: Item<'a, bool>,
     pub max_mints: Item<'a, u64>,
     pub mint_price: Item<'a, Coin>,
@@ -48,10 +48,10 @@ where
             }),
             operators: Map::new("operators"),
             _custom_response: PhantomData,
-            // Initialize the new fields
             minting_allowed: Item::new("minting_allowed"),
             max_mints: Item::new("max_mints"),
             mint_price: Item::new("mint_price"),
+            token_uri: Item::new("token_uri"),
         }
     }
 }
@@ -79,10 +79,10 @@ where
             operators: Map::new(operator_key),
             tokens: IndexedMap::new(tokens_key, indexes),
             _custom_response: PhantomData,
-            // Add these lines
             minting_allowed: Item::new("minting_allowed"),
             max_mints: Item::new("max_mints"),
             mint_price: Item::new("mint_price"),
+            token_uri: Item::new("token_uri"),
         }
     }
 
@@ -90,16 +90,16 @@ where
         Ok(self.token_count.may_load(storage)?.unwrap_or_default())
     }
 
-    pub fn increment_tokens(&self, storage: &mut dyn Storage) -> StdResult<u64> {
-        let val = self.token_count(storage)? + 1;
-        self.token_count.save(storage, &val)?;
-        Ok(val)
-    }
-
-    pub fn decrement_tokens(&self, storage: &mut dyn Storage) -> StdResult<u64> {
-        let val = self.token_count(storage)? - 1;
-        self.token_count.save(storage, &val)?;
-        Ok(val)
+    /// Update the token count by incrementing or decrementing it.
+    pub fn update_token_count(&self, storage: &mut dyn Storage, increment: bool) -> StdResult<u64> {
+        let mut current_count = self.token_count(storage)?;
+        if increment {
+            current_count += 1;
+        } else {
+            current_count -= 1;
+        }
+        self.token_count.save(storage, &current_count)?;
+        Ok(current_count)
     }
 }
 

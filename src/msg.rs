@@ -17,6 +17,14 @@ pub struct InstantiateMsg {
     pub minter: String,
     pub max_mints: u64,
     pub mint_price: Coin,
+    pub token_uri: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct NftDetailsResponse {
+    pub token_uri: Option<String>,
+    pub mint_price: Coin,
+    pub max_mints: u64,
 }
 
 /// This is like Cw721ExecuteMsg but we add a Mint command for an owner
@@ -69,10 +77,6 @@ pub enum ExecuteMsg<T> {
 pub struct MintMsg<T> {
     /// The owner of the newly minter NFT
     pub owner: String,
-    /// Universal resource identifier for this NFT
-    /// Should point to a JSON file that conforms to the ERC721
-    /// Metadata JSON Schema
-    pub token_uri: Option<String>,
     /// Any custom extension used by this contract
     pub extension: T,
 }
@@ -124,6 +128,10 @@ pub enum QueryMsg {
     NftInfo {
         token_id: String,
     },
+
+    /// Query all NFT-related details including token URI, extension, mint price, and max mints
+    NftDetails {},
+
     /// With MetaData Extension.
     /// Returns the result of both `NftInfo` and `OwnerOf` as one query as an optimization
     /// for clients: `AllNftInfo`

@@ -11,7 +11,7 @@ use cw721::{
 use cw_storage_plus::Bound;
 use cw_utils::maybe_addr;
 
-use crate::msg::{MinterResponse, QueryMsg};
+use crate::msg::{MinterResponse, QueryMsg, NftDetailsResponse};
 use crate::state::{Approval, Cw721Contract, TokenInfo};
 
 const DEFAULT_LIMIT: u32 = 10;
@@ -218,6 +218,18 @@ where
         })
     }
 
+    pub fn nft_details(&self, deps: Deps) -> StdResult<NftDetailsResponse> {
+        let mint_price = self.mint_price.load(deps.storage)?;
+        let max_mints = self.max_mints.load(deps.storage)?;
+        let token_uri = self.token_uri.load(deps.storage)?;
+
+        Ok(NftDetailsResponse {
+            token_uri,
+            mint_price,
+            max_mints,
+        })
+    }
+
     pub fn query(&self, deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         match msg {
             QueryMsg::Minter {} => to_json_binary(&self.minter(deps)?),
@@ -276,6 +288,9 @@ where
                 include_expired,
             } => {
                 to_json_binary(&self.approvals(deps, env, token_id, include_expired.unwrap_or(false))?)
+            }
+            QueryMsg::NftDetails {} => {
+                to_json_binary(&self.nft_details(deps)?)
             }
         }
     }

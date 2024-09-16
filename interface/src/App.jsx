@@ -135,7 +135,7 @@ export default function App() {
         ) : (
           <Center h="50vh">
             <VStack spacing={6}>
-              <Heading size="lg">Welcome to NFT Gallery Minter</Heading>
+              <Heading size="lg">Welcome to NFT Gallery</Heading>
               <Text>Connect your wallet to view and mint NFTs</Text>
               <Button size="lg" onClick={connectWallet} colorScheme="blue">
                 Connect Wallet

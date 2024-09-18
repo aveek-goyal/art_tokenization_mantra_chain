@@ -5,7 +5,6 @@ import {
   HStack,
   Heading,
   Text,
-  Input,
   Button,
   Flex,
   useColorMode,
@@ -13,8 +12,8 @@ import {
   Image,
   useToast,
   Center,
-  Spacer,
   Badge,
+  Skeleton,
 } from "@chakra-ui/react";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { useAccount, useConnect, useDisconnect } from "graz";
@@ -54,17 +53,19 @@ export default function App() {
         showToast("Error fetching config. Please try again later.", "error");
       });
     }
-  }, [isConnected, queryConfig, toast]);
+  }, [isConnected, queryConfig]);
 
   const handleMint = useCallback(() => {
     mintNft().then(() => {
       showToast("NFT minted successfully!", "success");
+      // Refresh the config after minting
+      queryConfig().then(setConfig);
     }).catch(error => {
       console.error("Failed to mint NFT:", error);
       setLoading(false);
       showToast("Error minting NFT. Please try again.", "error");
     });
-  }, [mintNft, setLoading]);
+  }, [mintNft, setLoading, queryConfig]);
 
   const showToast = (message, status) => {
     toast({
@@ -103,33 +104,42 @@ export default function App() {
         {isConnected && config ? (
           <VStack spacing={8} align="stretch">
             <Center>
-              <Image
-                src={config.image}
-                alt={config.name}
-                maxH="500px"
-                objectFit="contain"
-                borderRadius="lg"
-                boxShadow="xl"
-              />
+              {config.image ? (
+                <Image
+                  src={config.image}
+                  alt={config.name}
+                  maxH="500px"
+                  objectFit="contain"
+                  borderRadius="lg"
+                  boxShadow="xl"
+                  fallback={<Skeleton width="500px" height="500px" />}
+                />
+              ) : (
+                <Box width="500px" height="500px" bg="gray.300" borderRadius="lg" display="flex" alignItems="center" justifyContent="center">
+                  <Text>No image available</Text>
+                </Box>
+              )}
             </Center>
             <VStack spacing={4} align="center">
-              <Heading size="lg" colorScheme="black">{config.name}</Heading>
-              <Text fontSize="md" textAlign="center" maxW="600px" colorScheme="black">
+              <Heading size="lg">{config.name}</Heading>
+              <Text fontSize="md" textAlign="center" maxW="600px">
                 {config.description}
               </Text>
               <HStack>
                 <Badge colorScheme="blue">Max Mints: {config.max_mint}</Badge>
                 <Badge colorScheme="green">Mint Price: {config.mint_price} OM</Badge>
+                <Badge colorScheme="purple">Minted: {config.token_count} / {config.max_mint}</Badge>
               </HStack>
-                <Button
-                  onClick={handleMint}
-                  isLoading={loading}
-                  loadingText="Minting"
-                  colorScheme="blue"
-                  size="lg"
-                >
-                  Mint NFT
-                </Button>
+              <Button
+                onClick={handleMint}
+                isLoading={loading}
+                loadingText="Minting"
+                colorScheme="blue"
+                size="lg"
+                isDisabled={config.token_count >= config.max_mint}
+              >
+                {config.token_count >= config.max_mint ? "Sold Out" : "Mint NFT"}
+              </Button>
             </VStack>
           </VStack>
         ) : (

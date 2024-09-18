@@ -21,49 +21,75 @@ export function useNftContract() {
   const instantiateContract = useCallback(async (initMsg) => {
     if (!account) return;
     setLoading(true);
-    const signingClient = await getSigningClient();
-    const result = await signingClient.instantiate(
-      account.bech32Address,
-      initMsg.code_id,
-      initMsg,
-      "Instantiate NFT Contract",
-      "auto"
-    );
-    setLoading(false);
-    return result;
+    try {
+      const signingClient = await getSigningClient();
+      const result = await signingClient.instantiate(
+        account.bech32Address,
+        initMsg.code_id,
+        initMsg,
+        "Instantiate NFT Contract",
+        "auto"
+      );
+      setLoading(false);
+      return result;
+    } catch (error) {
+      console.error("Failed to instantiate contract:", error);
+      setLoading(false);
+      throw error;
+    }
   }, [account, getSigningClient]);
 
   const queryConfig = useCallback(async () => {
     if (!cosmWasmClient) return null;
     setLoading(true);
-    const nftdetails = await cosmWasmClient.queryContractSmart(CONTRACT_ADDRESS, { nft_details: {} });
-    const data = nftdetails.token_uri;
-    const response = await fetch(data);
-    const metadata = await response.json();
-    const nft = {name: metadata.name, description:metadata.description, image: `https://gateway.pinata.cloud/ipfs/${metadata.image.slice(7)}`, mint_price: ((nftdetails.mint_price.amount)/1000000), max_mint: nftdetails.max_mints}
-    setLoading(false);
-    return nft;
+    try {
+      const nftDetails = await cosmWasmClient.queryContractSmart(CONTRACT_ADDRESS, { nft_details: {} });
+      let metadata = {};
+      if (nftDetails.token_uri) {
+        const response = await fetch(nftDetails.token_uri);
+        metadata = await response.json();
+      }
+      const nft = {
+        name: nftDetails.name,
+        description: metadata.description || nftDetails.symbol,
+        image: metadata.image ? `https://gateway.pinata.cloud/ipfs/${metadata.image.slice(7)}` : null,
+        mint_price: Number(nftDetails.mint_price.amount) / 1000000,
+        max_mint: nftDetails.max_mints,
+        token_count: nftDetails.token_count
+      };
+      setLoading(false);
+      return nft;
+    } catch (error) {
+      console.error("Failed to fetch NFT details:", error);
+      setLoading(false);
+      throw error;
+    }
   }, [cosmWasmClient]);
 
   const mintNft = useCallback(async () => {
     if (!account) return;
     setLoading(true);
-    const signingClient = await getSigningClient();
-    const nftDetails = await queryConfig();
-    if (!nftDetails) {
+    try {
+      const signingClient = await getSigningClient();
+      const nftDetails = await queryConfig();
+      if (!nftDetails) {
+        throw new Error("Failed to fetch NFT details");
+      }
+      const mintPrice = nftDetails.mint_price;
+      await signingClient.execute(
+        account.bech32Address,
+        CONTRACT_ADDRESS,
+        { mint: {} },  // Updated to match the new contract structure
+        "auto",
+        "",
+        coins(mintPrice * 1000000, "uom")
+      );
       setLoading(false);
-      throw new Error("Failed to fetch NFT details");
+    } catch (error) {
+      console.error("Failed to mint NFT:", error);
+      setLoading(false);
+      throw error;
     }
-    const mintPrice = nftDetails.mint_price;
-    await signingClient.execute(
-      account.bech32Address,
-      CONTRACT_ADDRESS,
-      { mint: { owner: account.bech32Address, extension: {} } },
-      "auto",
-      "",
-      coins(mintPrice * 1000000, "uom")  
-    );
-    setLoading(false);
   }, [account, getSigningClient, queryConfig]);
 
   return { instantiateContract, queryConfig, mintNft, loading, setLoading };

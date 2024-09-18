@@ -49,4 +49,5 @@ export const mantraChainConfig = {
   ]
 };
   
-export const CONTRACT_ADDRESS = "mantra1z6n3vvnvxyc023lk9h8nxqyx4vfpnvfrndtse7tjn4jzytmn4axqplmhqh";
+export const CONTRACT_ADDRESS = "mantra157w9sp74mkkc3ghrqc0jgxm5e8hktg7s4an325383va92ufvn4ksm9pgww";
+//mantra1sl3cl4ynkcm2dvd8p83klrdj4qcyacvzerw3jxwsw8wap5gz0aaswqrhm7
